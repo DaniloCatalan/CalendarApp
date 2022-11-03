@@ -6,6 +6,9 @@ import 'react-datepicker/dist/react-datepicker.css';
 import es from 'date-fns/locale/es';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import { useUiStore } from '../../hooks/useUiStore';
+import { useEffect } from 'react';
+import { useCalendarStore } from '../../hooks';
 
 registerLocale('es', es);
 
@@ -23,7 +26,8 @@ const customStyles = {
 Modal.setAppElement('#root');
 
 export const CalendarModal = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  const { isDateModalOpen, closeDateModal } = useUiStore();
+  const { activeEvent, starSavingEvent } = useCalendarStore();
   const [formSubmitted, setFormSubmitted] = useState(false);
 
   const [formValues, setFormValues] = useState({
@@ -35,8 +39,14 @@ export const CalendarModal = () => {
 
   const titleClass = useMemo(() => {
     if (!formSubmitted) return '';
-    return (formValues.title.length >0 ? '' : 'is-invalid')
+    return formValues.title.length > 0 ? '' : 'is-invalid';
   }, [formValues.title, formSubmitted]);
+
+  useEffect(() => {
+    if (activeEvent !== null) {
+      setFormValues({ ...activeEvent });
+    }
+  }, [activeEvent]);
 
   const onInputChanged = ({ target }) => {
     setFormValues({
@@ -52,11 +62,10 @@ export const CalendarModal = () => {
     });
   };
   const onCloseModal = () => {
-    console.log('cerrando modal');
-    setIsOpen(false);
+    closeDateModal();
   };
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault();
     setFormSubmitted(true);
     const difference = differenceInSeconds(formValues.end, formValues.start);
@@ -68,11 +77,15 @@ export const CalendarModal = () => {
 
     if (formValues.title.length <= 0) return;
     console.log(formValues);
+
+    await starSavingEvent(formValues);
+    closeDateModal();
+    setFormSubmitted(false)
   };
 
   return (
     <Modal
-      isOpen={isOpen}
+      isOpen={isDateModalOpen}
       onRequestClose={onCloseModal}
       style={customStyles}
       className="modal"
