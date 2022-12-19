@@ -61,6 +61,11 @@ export const useAuthStore = () => {
     dispatch(onLogin({ name: name, uid: uid }));
   };
 
+  const startLogout = () => {
+    localStorage.clear();
+    dispatch(onLogout());
+  };
+
   return {
     // Properties
     status,
@@ -71,5 +76,6 @@ export const useAuthStore = () => {
     startLogin,
     starRegister,
     checkAuthToken,
+    startLogout,
   };
 };
